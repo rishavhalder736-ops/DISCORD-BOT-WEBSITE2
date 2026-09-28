@@ -1,0 +1,271 @@
+/* ==========================================================
+   Fitter — ultra layer
+   Holographic cards · kinetic type · outline section titles ·
+   hover pills · liquid buttons · cursor spotlight · signature
+   ========================================================== */
+
+@property --pulse-x { syntax: '<percentage>'; initial-value: -40%; inherits: false; }
+@property --holo { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@property --fill { syntax: '<percentage>'; initial-value: 0%; inherits: false; }
+@property --sheen { syntax: '<percentage>'; initial-value: 0%; inherits: false; }
+
+/* ---------- ambient cursor spotlight (page-wide) ---------- */
+.spotlight {
+  position: fixed; left: 0; top: 0; width: 1040px; height: 1040px; margin: -520px 0 0 -520px; z-index: 1; pointer-events: none;
+  border-radius: 50%; opacity: 0; will-change: transform;
+  background: radial-gradient(closest-side, color-mix(in oklch, var(--accent) 8%, transparent), transparent);
+  transition: opacity .6s;
+}
+html.spot-on .spotlight { opacity: 1; }
+[data-theme="light"] html.spot-on .spotlight, [data-theme="light"].spot-on .spotlight { opacity: .5; }
+html.shift-accent .spotlight { opacity: 0; }
+@media (hover: none) { .spotlight { display: none; } }
+main, .footer { position: relative; z-index: 2; }
+
+/* ---------- travelling light on the kinetic band edge ---------- */
+.kinetic::before, .kinetic::after {
+  content: ""; position: absolute; left: 0; width: 30%; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: pulse-edge 5s cubic-bezier(.6, 0, .4, 1) infinite;
+}
+.kinetic::before { top: -1px; } .kinetic::after { bottom: -1px; animation-direction: reverse; }
+@keyframes pulse-edge { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+/* ---------- giant outline section titles drifting on scroll ---------- */
+.store, .free, .builder, .faq { position: relative; overflow: clip; }
+.store::after, .free::after, .builder::after, .faq::after {
+  content: attr(data-name); position: absolute; z-index: 0; pointer-events: none;
+  top: 40px; left: 0; white-space: nowrap;
+  font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(6rem, 17vw, 16rem);
+  line-height: .8; letter-spacing: -0.05em; text-transform: uppercase;
+  color: transparent; -webkit-text-stroke: 1px color-mix(in oklch, var(--text) 9%, transparent);
+}
+.store > *, .free > *, .builder > *, .faq > * { position: relative; z-index: 1; }
+@supports (animation-timeline: view()) {
+  .store::after, .free::after, .builder::after, .faq::after {
+    animation: title-drift linear both; animation-timeline: view(); animation-range: cover 0% cover 100%;
+  }
+  .free::after, .faq::after { animation-name: title-drift-rev; left: auto; right: 0; }
+  @keyframes title-drift { from { translate: 20% 0; } to { translate: -30% 0; } }
+  @keyframes title-drift-rev { from { translate: -20% 0; } to { translate: 30% 0; } }
+}
+
+/* ---------- kinetic type band (scroll-linked, opposing directions) ---------- */
+.kinetic { padding: 70px 0; overflow: clip; border-block: 1px solid var(--line); background: var(--bg-2); position: relative; z-index: 2; }
+.k-row {
+  display: flex; gap: .45em; width: max-content; white-space: nowrap;
+  font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(3rem, 8vw, 7rem); line-height: 1; letter-spacing: -0.04em;
+}
+.k-row + .k-row { margin-top: 10px; }
+.k-row i { font-style: normal; color: var(--accent); font-size: .5em; align-self: center; }
+.k-row .o { color: transparent; -webkit-text-stroke: 1.5px var(--text); transition: color .3s; }
+.k-row span:hover { color: var(--accent); -webkit-text-stroke-color: var(--accent); }
+.k-b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: clamp(1.4rem, 3.4vw, 3rem); color: var(--muted); letter-spacing: -0.02em; }
+.k-b .o { -webkit-text-stroke-color: var(--muted); }
+@supports (animation-timeline: view()) {
+  .k-a { animation: k-left linear both; animation-timeline: view(); }
+  .k-b { animation: k-right linear both; animation-timeline: view(); }
+  @keyframes k-left { from { translate: 0 0; } to { translate: -40% 0; } }
+  @keyframes k-right { from { translate: -40% 0; } to { translate: 0 0; } }
+}
+@supports not (animation-timeline: view()) {
+  .k-a { animation: marq 30s linear infinite; }
+  .k-b { animation: marq 36s linear infinite reverse; }
+}
+
+/* ---------- holographic foil on store cards ---------- */
+.card { --holo: 0deg; }
+.card:not(.feature):hover {
+  background:
+    radial-gradient(300px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / .05), transparent 60%),
+    conic-gradient(from var(--holo) at var(--mx, 50%) var(--my, 50%),
+      oklch(.85 .15 130 / .09), oklch(.8 .13 200 / .07), oklch(.78 .14 280 / .06),
+      oklch(.85 .15 60 / .07), oklch(.85 .15 130 / .09)),
+    var(--surface);
+  animation: holo-spin 5s linear infinite;
+}
+@keyframes holo-spin { to { --holo: 360deg; } }
+.card .card-glyph { transition: transform .5s var(--ease-spring), filter .3s; }
+.card:hover .card-glyph { transform: translateZ(40px) rotate(-8deg) scale(1.08); filter: drop-shadow(0 8px 16px color-mix(in oklch, var(--accent) 35%, transparent)); }
+.card .cmds span { transition: background .25s, color .25s, translate .3s var(--ease-spring); }
+.card:hover .cmds span { background: color-mix(in oklch, var(--accent) 12%, var(--surface-2)); color: var(--text); }
+.card:hover .cmds span:nth-child(odd) { translate: 0 -2px; }
+
+/* ---------- liquid fill ghost buttons (fill grows from cursor) ---------- */
+.btn-ghost { position: relative; isolation: isolate; overflow: hidden; }
+.btn-ghost::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: var(--text);
+  clip-path: circle(var(--fill) at var(--bx, 50%) var(--by, 50%));
+  transition: --fill .55s var(--ease-out);
+}
+.btn-ghost:hover::before { --fill: 150%; }
+.btn-ghost:hover { color: var(--bg); border-color: var(--text); background: transparent; }
+.btn-ghost svg { transition: translate .4s var(--ease-spring); }
+.btn-ghost:hover svg { translate: 0 2px; }
+
+/* ---------- nav: hover pill that glides between links (anchor positioning) ---------- */
+@supports (anchor-name: --a) {
+  .nav ul { position: relative; }
+  .nav ul a { position: relative; z-index: 1; }
+  .nav ul a:hover { anchor-name: --nav-hover; background: transparent; }
+  .nav ul::before {
+    content: ""; position: absolute; z-index: 0; position-anchor: --nav-hover;
+    top: anchor(top); bottom: anchor(bottom); left: anchor(left); right: anchor(right);
+    border-radius: 8px; background: var(--surface); border: 1px solid var(--line);
+    opacity: 0; transition: left .4s var(--ease-spring), right .4s var(--ease-spring), opacity .25s;
+  }
+  .nav ul:has(a:hover)::before { opacity: 1; }
+}
+
+/* ---------- headings: animated accent underline on key words ---------- */
+.section-head h2, .free-copy h2, .builder-form h2 { position: relative; }
+.section-head h2::after, .free-copy h2::after, .builder-form h2::after {
+  content: ""; display: block; height: 4px; width: 72px; margin-top: 20px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent) var(--sheen), color-mix(in oklch, var(--accent) 30%, transparent) 0);
+  animation: bar-load 1.6s var(--ease-out) both;
+}
+@keyframes bar-load { from { --sheen: 0%; } to { --sheen: 100%; } }
+
+/* ---------- Discord: typing indicator after the feed ---------- */
+.dc-input { position: relative; }
+.dc-input::after {
+  content: "Sentinel is typing"; position: absolute; left: 4px; top: -22px; font-size: 11px; color: #949ba4;
+  padding-left: 30px;
+  background:
+    radial-gradient(circle, #dbdee1 2.5px, transparent 3px) 0 50% / 8px 8px no-repeat,
+    radial-gradient(circle, #dbdee1 2.5px, transparent 3px) 9px 50% / 8px 8px no-repeat,
+    radial-gradient(circle, #dbdee1 2.5px, transparent 3px) 18px 50% / 8px 8px no-repeat;
+  animation: typing 1.2s steps(3) infinite;
+}
+@keyframes typing { 0% { opacity: .5; } 50% { opacity: 1; } 100% { opacity: .5; } }
+
+/* ---------- builder: live scan beam across the preview card ---------- */
+.preview-card { position: relative; overflow: hidden; }
+.preview-card::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 80px; top: 0; pointer-events: none; transform: translateY(-80px);
+  background: linear-gradient(transparent, color-mix(in oklch, var(--accent) 10%, transparent), transparent);
+  animation: scan 4.5s linear infinite;
+}
+@keyframes scan { to { transform: translateY(700px); } }
+
+/* ---------- focus rings that breathe ---------- */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@keyframes ring { 50% { outline-offset: 5px; } }
+
+/* ---------- footer credit ---------- */
+.credit { display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 36px 0 48px; }
+.credit-line { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2), transparent); }
+.credit-text { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.heart { color: #ff5a6e; animation: heartbeat 1.4s ease-in-out infinite; transform-origin: center; }
+html.shift-accent .heart { color: #b3122b; }
+@keyframes heartbeat { 0%, 100% { scale: 1; } 15% { scale: 1.25; } 30% { scale: 1; } 45% { scale: 1.18; } 60% { scale: 1; } }
+.signature {
+  position: relative; display: inline-block; text-transform: none; letter-spacing: -0.02em;
+  font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(22px, 3vw, 30px); color: var(--text);
+  background: linear-gradient(100deg, var(--text) 0 40%, var(--accent) 50%, var(--text) 60% 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  padding-bottom: 8px;
+}
+html.shift-accent .signature { background-image: linear-gradient(100deg, #11140a 0 40%, #4a6a00 50%, #11140a 60% 100%); }
+@keyframes sig-shine { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.sig-stroke { position: absolute; left: -4%; right: -4%; bottom: -6px; width: 108%; height: 14px; overflow: visible; }
+.sig-stroke path { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+html.shift-accent .sig-stroke path { stroke: #11140a; }
+@supports (animation-timeline: view()) {
+  .sig-stroke path { animation: sig-draw linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; }
+}
+@supports not (animation-timeline: view()) { .sig-stroke path { stroke-dashoffset: 0; } }
+@keyframes sig-draw { to { stroke-dashoffset: 0; } }
+.signature:hover { animation: sig-shine 1.4s ease-in-out; }
+.signature:hover .sig-stroke path { animation: sig-redraw 1s var(--ease-out); }
+@keyframes sig-redraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ---------- view transitions for store filtering ---------- */
+::view-transition-group(*) { animation-duration: .55s; animation-timing-function: var(--ease-out); }
+
+@media (max-width: 700px) {
+  .kinetic { padding: 44px 0; }
+  .store::after, .free::after, .builder::after, .faq::after { top: 24px; }
+  .credit-text { flex-wrap: wrap; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kinetic::before, .kinetic::after, .card:hover, .signature, .heart, .preview-card::after, .dc-input::after,
+  .section-head h2::after, .free-copy h2::after, .builder-form h2::after, :focus-visible, .k-a, .k-b { animation: none !important; }
+  .sig-stroke path { stroke-dashoffset: 0; }
+}
+.src-link{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+/* ==========================================================
+   Performance: pause every looping animation that is off-screen
+   ========================================================== */
+.perf-off, .perf-off *, .perf-off *::before, .perf-off *::after, .perf-off::before, .perf-off::after { animation-play-state: paused !important; }
+/* lite mode for low-power devices, touch screens and scroll bursts */
+html.lite body::after, html.lite .spotlight { display: none; }
+html.lite .card.feature, html.lite .preview-card, html.lite .price-tag, html.lite .card.is-wip .card-glyph, html.lite .hero-title em::after { animation: none !important; }
+
+/* ==========================================================
+   Mobile / low-power "lite" mode
+   ========================================================== */
+html.lite .loader, html.lite .curtain, html.lite #field, html.lite .rail, html.lite .cursor { display: none !important; }
+html.lite .store::after, html.lite .free::after, html.lite .builder::after, html.lite .faq::after { display: none; }
+html.lite .eyebrow { backdrop-filter: none; }
+html.lite .section-head h2, html.lite .builder-form h2, html.lite .faq h2, html.lite .demo-copy h2,
+html.lite .guarantees li, html.lite .marquee { animation: none !important; clip-path: none !important; }
+html.lite .kinetic::before, html.lite .kinetic::after, html.lite .preview-card::after, html.lite .dc-input::after { animation: none; }
+html.lite .hero-title, html.lite .lede, html.lite .hero-cta, html.lite .term, html.lite .eyebrow { animation: lite-in .6s cubic-bezier(.16,1,.3,1) both; }
+html.lite .lede { animation-delay: .06s; } html.lite .hero-cta { animation-delay: .12s; } html.lite .term { animation-delay: .18s; }
+@keyframes lite-in { from { transform: translateY(14px); } to { transform: none; } }
+html.lite .build-lines .h, html.lite .build-lines .v { transition: none !important; }
+
+/* ==========================================================
+   Display mode switch — Full (default) ⇄ Lite (recommended for mobile)
+   ========================================================== */
+.mode-btn { position: relative; color: var(--text); transition: background .25s, border-color .25s, color .25s; }
+.mode-btn svg { transition: transform .35s cubic-bezier(.16,1,.3,1), opacity .25s; }
+.mode-btn .mode-ico-full { display: none; }
+html.lite .mode-btn .mode-ico-lite { display: none; }
+html.lite .mode-btn .mode-ico-full { display: block; }
+html.lite .mode-btn { border-color: var(--accent); color: var(--accent); }
+.mode-btn:hover svg { transform: scale(1.12) rotate(-6deg); }
+.mode-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); opacity: 0; transform: scale(.4); transition: opacity .3s, transform .3s; }
+html.touch.full .mode-dot { opacity: 1; transform: none; }
+.mode-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.mode-chip {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 95;
+  display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100% - 24px);
+  padding: 8px 8px 8px 14px; border-radius: 14px; border: 1px solid var(--line-2, var(--line));
+  background: color-mix(in srgb, var(--surface) 92%, transparent); color: var(--text);
+  box-shadow: 0 18px 50px -18px rgb(0 0 0 / .6); font-size: 13px; line-height: 1.25;
+  transform: translate(-50%, 140%); opacity: 0; transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .3s;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.mode-chip[hidden] { display: none; }
+.mode-chip.show { transform: translate(-50%, 0); opacity: 1; }
+.mode-chip-txt span { color: var(--muted); }
+.mode-chip-go {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: none;
+  padding: 7px 12px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-ink, #0d0f0b);
+  font-weight: 700; font-size: 13px; line-height: 1.1;
+}
+.mode-chip-go em { font-style: normal; font-weight: 500; font-size: 10.5px; opacity: .8; letter-spacing: .02em; }
+.mode-chip-x { width: 30px; height: 30px; flex: none; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; }
+.mode-chip-x:hover { background: var(--surface-2); color: var(--text); }
+@media (max-width: 380px) { .mode-chip-txt span { display: none; } }
+
+html.mode-switching body { opacity: 0; transition: opacity .18s ease; }
+
+/* ---------- smoother Full mode on touch screens (same effects, cheaper to paint) ---------- */
+html.full.touch .cursor, html.full.touch .spotlight { display: none; }
+html.full #field { will-change: opacity; }
+html.full .marquee-track { will-change: transform; backface-visibility: hidden; }
+html.full.touch .card { transform-style: flat; }
+@media (prefers-reduced-motion: reduce) { .mode-chip, .mode-btn svg, html.mode-switching body { transition: none; } }
+/* keep the nav on one row on small phones now that it has a mode switch */
+@media (max-width: 440px) {
+  .nav-actions { gap: 6px; }
+  .nav-actions .icon-btn, .nav-actions .nav-phone { width: 40px; height: 40px; }
+  .nav-actions .cart-btn { height: 40px; padding: 0 10px; gap: 6px; }
+}
+@media (max-width: 360px) { .nav-actions .nav-phone { display: none; } }

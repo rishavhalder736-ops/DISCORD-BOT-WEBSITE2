@@ -1,0 +1,248 @@
+/* ==========================================================
+   Fitter — advanced CSS layer
+   Progressive enhancement: every block degrades gracefully.
+   ========================================================== */
+
+/* ---------- typed custom properties (animatable) ---------- */
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@property --glow { syntax: '<percentage>'; initial-value: 0%; inherits: false; }
+@property --shine { syntax: '<percentage>'; initial-value: -30%; inherits: false; }
+@property --nav-pad { syntax: '<length>'; initial-value: 10px; inherits: true; }
+
+:root {
+  interpolate-size: allow-keywords;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  --accent-soft: color-mix(in oklch, var(--accent) 16%, transparent);
+  --accent-line: color-mix(in oklch, var(--accent) 45%, transparent);
+  scrollbar-color: var(--accent-line) transparent;
+}
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+h1, h2, h3, .cta-title { text-wrap: balance; }
+p, .desc, summary { text-wrap: pretty; }
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- film grain overlay (SVG turbulence filter) ---------- */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 999; pointer-events: none; opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-theme="light"] body::after { opacity: .05; filter: invert(1); }
+@keyframes grain {
+  0% { transform: translate(0, 0); } 20% { transform: translate(-4%, 3%); } 40% { transform: translate(3%, -5%); }
+  60% { transform: translate(-6%, -2%); } 80% { transform: translate(5%, 4%); } 100% { transform: translate(0, 0); }
+}
+
+/* ---------- conic "circuit" borders via @property ---------- */
+.conic-border, .card.feature, .preview-card, .btn-primary.magnetic {
+  --angle: 0deg;
+}
+.card.feature, .preview-card {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    conic-gradient(from var(--angle), var(--line) 0 70%, var(--accent) 80%, var(--line) 90% 100%) border-box;
+  animation: spin-angle 6s linear infinite;
+}
+@keyframes spin-angle { to { --angle: 360deg; } }
+
+/* primary CTA: sweeping shine + animated glow ring */
+.btn-primary { position: relative; isolation: isolate; overflow: hidden; }
+.btn-primary::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(105deg, transparent calc(var(--shine) - 12%), rgb(255 255 255 / .55) var(--shine), transparent calc(var(--shine) + 12%));
+  mix-blend-mode: soft-light;
+}
+.btn-primary:hover::after { animation: shine .9s var(--ease-out); }
+@keyframes shine { from { --shine: -30%; } to { --shine: 130%; } }
+.btn-primary:hover { box-shadow: 0 0 0 4px var(--accent-soft), 0 10px 40px -8px var(--accent-line); }
+
+/* ---------- cards: container queries, cursor-tracked border, sibling focus ---------- */
+.card { container: card / inline-size; }
+.card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .3s;
+}
+.card:hover::after { opacity: 1; }
+@container card (min-width: 460px) {
+  .card-top .card-glyph { width: 64px; height: 64px; }
+  .card h3 { font-size: 36px; }
+}
+@container card (max-width: 300px) {
+  .card-foot { flex-direction: column; align-items: stretch; }
+  .card-foot .add { width: 100%; }
+}
+@media (hover: hover) {
+  .grid:has(.card:hover) .card:not(:hover) { filter: saturate(.4) brightness(.8); }
+  .grid .card { transition: border-color .3s, opacity .4s, filter .4s; }
+}
+.card.is-wip .card-glyph { animation: wip-pulse 2.4s ease-in-out infinite; }
+@keyframes wip-pulse { 50% { color: var(--gold); } }
+
+/* ---------- scroll-driven animations (native CSS) ---------- */
+@supports (animation-timeline: view()) {
+  /* page progress purely in CSS */
+  .progress span { animation: grow-x linear both; animation-timeline: scroll(root); }
+  @keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* nav condenses once you leave the top */
+  .nav { animation: nav-condense linear both; animation-timeline: scroll(root); animation-range: 0 240px; }
+  @keyframes nav-condense {
+    to { top: 8px; width: min(1080px, 100% - 24px); box-shadow: 0 12px 40px -12px rgb(0 0 0 / .45); background: color-mix(in oklch, var(--bg) 88%, transparent); }
+  }
+
+  /* headings wipe in with clip-path (no layout shift) */
+  .section-head h2, .builder-form h2, .faq h2, .demo-copy h2 {
+    animation: wipe linear both; animation-timeline: view(); animation-range: entry 10% cover 35%;
+  }
+  @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  /* marquee skews with scroll position */
+  .marquee { animation: skew linear both; animation-timeline: view(); }
+  @keyframes skew { from { transform: skewY(-1.5deg); } 50% { transform: none; } to { transform: skewY(1.5deg); } }
+
+  /* the big stat scales & brightens as it crosses the viewport */
+  .huge { transform-origin: left bottom; animation: zoom-in linear both; animation-timeline: view(); animation-range: entry 0% cover 50%; }
+  @keyframes zoom-in { from { scale: .7; opacity: .15; } to { scale: 1; opacity: 1; } }
+
+  /* guarantee rows light up in sequence */
+  .guarantees li { animation: row-in linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
+  @keyframes row-in { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0); } }
+
+  /* store cards: 3D tilt-up as they enter */
+  .grid { perspective: 1400px; }
+  .card { animation: card-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 80%; }
+  @keyframes card-rise { from { rotate: x 18deg; opacity: 0; } to { rotate: x 0deg; opacity: 1; } }
+
+  /* CTA title letter-spacing tightens as you arrive */
+  .cta-title { animation: tighten linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
+  @keyframes tighten { from { letter-spacing: .04em; opacity: .2; } to { letter-spacing: -0.04em; opacity: 1; } }
+
+  /* hero dot-grid parallax fades as you leave */
+  #field { animation: fade-field linear both; animation-timeline: scroll(root); animation-range: 0 100vh; }
+  @keyframes fade-field { to { opacity: 0; scale: 1.15; } }
+}
+
+/* ---------- hero: glitch "fit" + outlined echo ---------- */
+.hero-title em { display: inline-block; }
+.hero-title em::before, .hero-title em::after {
+  content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
+}
+.hero-title em::before {
+  color: transparent; -webkit-text-stroke: 1.5px var(--accent);
+  translate: .06em .06em; opacity: .5; z-index: -1;
+}
+.hero-title em::after {
+  color: var(--text); clip-path: inset(0 0 100% 0);
+  animation: glitch 5s steps(1) infinite;
+}
+@keyframes glitch {
+  0%, 88%, 100% { clip-path: inset(0 0 100% 0); translate: 0; }
+  89% { clip-path: inset(20% 0 55% 0); translate: -4px 0; }
+  91% { clip-path: inset(62% 0 8% 0); translate: 5px 0; }
+  93% { clip-path: inset(40% 0 38% 0); translate: -2px 0; }
+  95% { clip-path: inset(0 0 100% 0); }
+}
+.eyebrow { backdrop-filter: blur(8px) saturate(1.4); }
+
+/* ---------- marquee edge fade with mask ---------- */
+.marquee { mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+/* ---------- assembly stage: blueprint vignette + corner brackets ---------- */
+.assembly-stage {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 55%, color-mix(in oklch, var(--accent) 7%, transparent), transparent 70%),
+    var(--bg-2);
+}
+.assembly-stage::before, .assembly-stage::after {
+  content: ""; position: absolute; width: 28px; height: 28px; pointer-events: none; z-index: 3;
+  border: 2px solid var(--accent);
+}
+.assembly-stage::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+.assembly-stage::after { bottom: 10px; right: 10px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+.status-pill.on { box-shadow: 0 0 24px -4px var(--accent-line); }
+#bot { filter: drop-shadow(0 20px 30px color-mix(in oklch, var(--accent) 12%, transparent)); }
+
+/* ---------- discord window: glass chrome ---------- */
+.discord { position: relative; }
+.discord::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--angle), transparent 0 60%, var(--blurple) 75%, var(--accent) 85%, transparent 95%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: spin-angle 8s linear infinite;
+}
+
+/* ---------- builder: :has()-driven state ---------- */
+.builder-form:has(.mod input:checked:nth-of-type(1)) ~ .builder-out .pc-status span { animation: ping 2s infinite; }
+.mod { transition: border-color .2s, background .2s, transform .35s var(--ease-spring); }
+.mod:not(.mod-wip):active { transform: scale(.97); }
+.mod:has(input:checked) { background: linear-gradient(135deg, var(--accent-soft), transparent 70%), var(--surface); }
+.mod input:checked ~ .box svg path { stroke-dasharray: 20; stroke-dashoffset: 20; animation: tick-in .35s var(--ease-out) forwards; }
+@keyframes tick-in { to { stroke-dashoffset: 0; } }
+input[type="range"] { accent-color: var(--accent); }
+.field input { transition: border-color .2s, box-shadow .2s; }
+.field input:focus { box-shadow: 0 0 0 4px var(--accent-soft); }
+.field input:user-invalid { border-color: var(--danger); box-shadow: 0 0 0 4px color-mix(in oklch, var(--danger) 18%, transparent); }
+.quote-price { font-variant-numeric: tabular-nums; }
+
+/* ---------- FAQ: animated height with ::details-content ---------- */
+details::details-content {
+  block-size: 0; overflow: hidden;
+  transition: block-size .45s var(--ease-out), content-visibility .45s allow-discrete;
+}
+details[open]::details-content { block-size: auto; }
+summary { transition: color .2s, padding-left .3s var(--ease-out); }
+summary:hover { color: var(--accent); padding-left: 8px; }
+
+/* ---------- contact chips: magnetic lift + icon spin ---------- */
+.contact-chip svg { transition: rotate .5s var(--ease-spring); }
+.contact-chip:hover svg { rotate: -12deg; }
+.contact-chip { transition: border-color .2s, translate .3s var(--ease-spring), box-shadow .3s; }
+.contact-chip:hover { transform: none; translate: 0 -3px; box-shadow: 0 14px 30px -14px var(--accent-line); }
+
+/* ---------- entry animations with @starting-style ---------- */
+.drawer .line-item { transition: opacity .4s var(--ease-out), translate .4s var(--ease-out); }
+@starting-style { .drawer .line-item { opacity: 0; translate: 24px 0; } }
+.toast.show { transition: transform .4s var(--ease-spring), opacity .3s, visibility .3s; }
+dialog[open] { transition: opacity .35s var(--ease-out), scale .35s var(--ease-out), display .35s allow-discrete, overlay .35s allow-discrete; }
+@starting-style { dialog[open] { opacity: 0; scale: .94; } }
+dialog::backdrop { transition: background .3s, backdrop-filter .3s; }
+body:has(dialog[open]), body:has(.drawer.open) { overflow: hidden; }
+.co-pay .qr { animation: qr-in .6s var(--ease-out); }
+@keyframes qr-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+
+/* ---------- theme switch: circular View Transition ---------- */
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { animation: reveal-theme .7s var(--ease-out); }
+@keyframes reveal-theme { from { clip-path: circle(0 at var(--vt-x, 90%) var(--vt-y, 4%)); } to { clip-path: circle(150% at var(--vt-x, 90%) var(--vt-y, 4%)); } }
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: var(--accent-line); border-radius: 10px; border: 3px solid var(--bg); }
+::-webkit-scrollbar-track { background: var(--bg); }
+
+@media (prefers-reduced-motion: reduce) {
+  body::after, .card.feature, .preview-card, .discord::before, .hero-title em::after { animation: none !important; }
+  .card, .huge, .cta-title, .guarantees li, .marquee, .nav, #field, .section-head h2, .builder-form h2, .faq h2, .demo-copy h2 { animation: none !important; }
+}
+
+/* ---------- filter tabs: sliding pill via CSS Anchor Positioning ---------- */
+@supports (anchor-name: --a) {
+  .filters { position: relative; anchor-scope: --active-tab; }
+  .filters button { position: relative; z-index: 1; transition: color .3s; }
+  .filters button[aria-selected="true"] { anchor-name: --active-tab; background: transparent; }
+  .filters::before {
+    content: ""; position: absolute; position-anchor: --active-tab; z-index: 0;
+    top: anchor(top); bottom: anchor(bottom); left: anchor(left); right: anchor(right);
+    background: var(--accent); border-radius: 8px;
+    transition: left .45s var(--ease-spring), right .45s var(--ease-spring);
+    box-shadow: 0 6px 20px -6px var(--accent-line);
+  }
+}

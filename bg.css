@@ -1,0 +1,92 @@
+/* ==========================================================
+   Fitter — constant animated background
+   Aurora orbs · drifting circuit grid · slow light sweep · rising sparks
+   GPU-only (transform / opacity), no blur filters, no JS.
+   ========================================================== */
+.bg-anim {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  contain: strict; isolation: isolate;
+  --o1: color-mix(in oklch, var(--accent) 26%, transparent);
+  --o2: color-mix(in oklch, #3dd6c4 20%, transparent);
+  --o3: color-mix(in oklch, #8b7bff 16%, transparent);
+  --grid: color-mix(in oklch, var(--accent) 9%, transparent);
+}
+[data-theme="light"] .bg-anim {
+  --o1: color-mix(in oklch, var(--accent) 16%, transparent);
+  --o2: color-mix(in oklch, #1aa597 12%, transparent);
+  --o3: color-mix(in oklch, #6a5cff 10%, transparent);
+  --grid: color-mix(in oklch, var(--accent) 12%, transparent);
+}
+
+/* ---------- aurora orbs ---------- */
+.bg-orb {
+  position: absolute; border-radius: 50%; will-change: transform; backface-visibility: hidden;
+  width: 62vmax; height: 62vmax;
+}
+.bg-orb.o1 { left: -18vmax; top: -22vmax; background: radial-gradient(closest-side, var(--o1), transparent 72%); animation: bg-drift-1 26s ease-in-out infinite alternate; }
+.bg-orb.o2 { right: -24vmax; top: 18vh; background: radial-gradient(closest-side, var(--o2), transparent 72%); animation: bg-drift-2 32s ease-in-out infinite alternate; }
+.bg-orb.o3 { left: 20vw; bottom: -30vmax; background: radial-gradient(closest-side, var(--o3), transparent 72%); animation: bg-drift-3 38s ease-in-out infinite alternate; }
+@keyframes bg-drift-1 { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(14vw, 10vh, 0) scale(1.15); } 100% { transform: translate3d(28vw, -4vh, 0) scale(.95); } }
+@keyframes bg-drift-2 { 0% { transform: translate3d(0, 0, 0) scale(1.05); } 50% { transform: translate3d(-18vw, 16vh, 0) scale(.9); } 100% { transform: translate3d(-6vw, -12vh, 0) scale(1.12); } }
+@keyframes bg-drift-3 { 0% { transform: translate3d(0, 0, 0) scale(.95); } 50% { transform: translate3d(-16vw, -14vh, 0) scale(1.1); } 100% { transform: translate3d(12vw, -6vh, 0) scale(1); } }
+
+/* ---------- drifting circuit grid (seamless loop) ---------- */
+.bg-grid {
+  position: absolute; inset: -64px; will-change: transform;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 75%);
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 75%);
+  animation: bg-grid-move 18s linear infinite;
+}
+@keyframes bg-grid-move { to { transform: translate3d(64px, 64px, 0); } }
+
+/* ---------- slow rotating light sweep ---------- */
+.bg-sweep {
+  position: absolute; left: 50%; top: 50%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax;
+  background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in oklch, var(--accent) 7%, transparent) 80%, transparent 90%);
+  will-change: transform; animation: bg-spin 40s linear infinite; opacity: .8;
+}
+[data-theme="light"] .bg-sweep { opacity: .5; }
+@keyframes bg-spin { to { transform: rotate(1turn); } }
+
+/* ---------- rising sparks ---------- */
+.bg-sparks i {
+  position: absolute; bottom: -12px; left: var(--x); width: 3px; height: 3px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 8px var(--accent); opacity: 0; will-change: transform, opacity;
+  animation: bg-rise var(--d, 14s) linear var(--delay, 0s) infinite;
+}
+@keyframes bg-rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  10% { opacity: .7; }
+  50% { transform: translate3d(var(--sway, 20px), -55vh, 0); }
+  85% { opacity: .5; }
+  100% { transform: translate3d(0, -110vh, 0); opacity: 0; }
+}
+
+/* follow the site's section colour shifts */
+html.shift-deep .bg-orb.o1 { opacity: .55; }
+html.shift-accent .bg-sweep { opacity: 1.2; }
+.bg-orb, .bg-sweep { transition: opacity 1s ease; }
+
+/* ---------- Lite mode: same constant motion, fewer layers ---------- */
+html.lite .bg-sweep, html.lite .bg-sparks i:nth-child(n+5) { display: none; }
+html.lite .bg-orb.o1 { animation-duration: 34s; }
+html.lite .bg-orb.o2 { animation-duration: 40s; }
+html.lite .bg-orb.o3 { display: none; }
+html.lite .bg-grid { animation-duration: 26s; }
+
+/* small screens: lighter layers so scrolling stays at 60fps */
+@media (max-width: 700px) {
+  .bg-orb { width: 90vmax; height: 90vmax; }
+  .bg-grid { background-size: 48px 48px; }
+  @keyframes bg-grid-move { to { transform: translate3d(48px, 48px, 0); } }
+  .bg-sparks i:nth-child(n+7) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-orb, .bg-grid, .bg-sweep, .bg-sparks i { animation: none !important; }
+  .bg-sparks { display: none; }
+}
